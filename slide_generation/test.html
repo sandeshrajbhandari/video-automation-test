@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide PDF API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        input[type="file"] {
+            margin: 10px 0;
+        }
+
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Slide PDF API Test</h1>
+
+    <div class="container">
+        <h2>Method 1: Upload Markdown File</h2>
+        <form id="fileForm">
+            <input type="file" id="markdownFile" accept=".md,text/markdown" required>
+            <button type="submit">Convert File to PDF</button>
+        </form>
+        <div id="fileStatus"></div>
+    </div>
+
+    <div class="container">
+        <h2>Method 2: Paste Markdown Content</h2>
+        <textarea id="markdownContent" placeholder="Paste your markdown content here..."># Welcome to Slidev
+
+Presentation slides for developers
+
+---
+
+# What is Slidev?
+
+Slidev is a slides maker and presenter designed for developers, consist of the following features
+
+- 📝 **Text-based** - focus on the content with Markdown, and then style them later
+- 🎨 **Themable** - themes can be shared and re-used as npm packages
+- 🧑‍💻 **Developer Friendly** - code highlighting, live coding with autocompletion
+- 🤹 **Interactive** - embed Vue components to enhance your expressions
+- 🎥 **Recording** - built-in recording and camera view
+- 📤 **Portable** - export to PDF, PPTX, PNGs, or even a hostable SPA
+- 🛠 **Hackable** - virtually anything that's possible on a webpage is possible in Slidev
+
+---
+
+# Thank You!
+
+Made with ❤️ using Slidev</textarea>
+        <br>
+        <input type="text" id="filename" placeholder="Filename (optional)" value="slides">
+        <button onclick="convertText()">Convert Text to PDF</button>
+        <div id="textStatus"></div>
+    </div>
+
+    <div class="container">
+        <h2>API Endpoints</h2>
+        <ul>
+            <li><strong>POST /convert</strong> - Upload a markdown file (multipart/form-data)</li>
+            <li><strong>POST /convert-text</strong> - Send markdown content in JSON body</li>
+            <li><strong>GET /health</strong> - Health check endpoint</li>
+        </ul>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // File upload handler
+        document.getElementById('fileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('markdownFile');
+            const statusDiv = document.getElementById('fileStatus');
+
+            if (!fileInput.files[0]) {
+                showStatus(statusDiv, 'Please select a file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('markdown', fileInput.files[0]);
+
+            showStatus(statusDiv, 'Converting file to PDF...', 'loading');
+
+            try {
+                const response = await fetch(`${API_BASE}/convert`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    downloadPDF(blob, fileInput.files[0].name.replace('.md', '.pdf'));
+                    showStatus(statusDiv, 'PDF generated successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showStatus(statusDiv, `Error: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(statusDiv, `Network error: ${error.message}`, 'error');
+            }
+        });
+
+        // Text conversion handler
+        async function convertText() {
+            const content = document.getElementById('markdownContent').value;
+            const filename = document.getElementById('filename').value || 'slides';
+            const statusDiv = document.getElementById('textStatus');
+
+            if (!content.trim()) {
+                showStatus(statusDiv, 'Please enter some markdown content', 'error');
+                return;
+            }
+
+            showStatus(statusDiv, 'Converting text to PDF...', 'loading');
+
+            try {
+                const response = await fetch(`${API_BASE}/convert-text`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        filename: filename
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    downloadPDF(blob, `${filename}.pdf`);
+                    showStatus(statusDiv, 'PDF generated successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showStatus(statusDiv, `Error: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(statusDiv, `Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(element, message, type) {
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function downloadPDF(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Test health endpoint on page load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    console.log('API is running');
+                } else {
+                    console.log('API health check failed');
+                }
+            } catch (error) {
+                console.log('API not available:', error.message);
+            }
+        });
+    </script>
+</body>
+
+</html>

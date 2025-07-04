@@ -1,0 +1,396 @@
+# Slidev Cursor Rules
+
+## Overview
+Slidev is a slides maker and presenter designed for developers. It uses Markdown with Vue.js components and special syntax for creating interactive presentations.
+
+## File Structure
+- Main presentation file: `slides.md`
+- Components: `./components/` directory
+- External snippets: `./snippets/` directory
+- Imported slides: `./pages/` directory
+
+## Frontmatter Syntax
+Each slide starts with YAML frontmatter between `---` delimiters:
+
+```yaml
+---
+theme: seriph                    # Theme name
+background: https://cover.sli.dev # Background image
+title: Welcome to Slidev         # Slide title
+info: |                          # Multi-line info
+  ## Slidev Starter Template
+  Presentation slides for developers.
+class: text-center               # CSS classes for the slide
+drawings:                        # Drawing settings
+  persist: false
+transition: slide-left           # Slide transition
+mdc: true                        # Enable MDC syntax
+level: 2                         # Heading level for TOC
+layout: two-cols                 # Layout type
+layoutClass: gap-16              # Layout CSS classes
+image: https://cover.sli.dev     # Image for image layouts
+src: ./pages/imported-slides.md  # Import external slide file
+hide: false                      # Hide slide from TOC
+---
+```
+
+## Slide Separators
+Use `---` to separate slides:
+```markdown
+# Slide 1 content
+
+---
+
+# Slide 2 content
+```
+
+## Layouts
+Slidev provides several built-in layouts:
+
+### Default Layout
+```markdown
+# Regular slide content
+```
+
+### Two Columns
+```markdown
+---
+layout: two-cols
+layoutClass: gap-16
+---
+
+# Left column content
+
+::right::
+
+# Right column content
+```
+
+### Image Right
+```markdown
+---
+layout: image-right
+image: https://example.com/image.jpg
+---
+
+# Content with image on the right
+```
+
+### Center Layout
+```markdown
+---
+layout: center
+class: text-center
+---
+
+# Centered content
+```
+
+## Vue Directives
+
+### Click Animations
+```html
+<div v-click>Content that appears on click</div>
+<div v-click="2">Content that appears on second click</div>
+<div v-after>Content that appears after previous element</div>
+```
+
+### Motion Animations
+```html
+<div
+  v-motion
+  :initial="{ x: -80, opacity: 0 }"
+  :enter="{ x: 0, opacity: 1 }"
+  :click-3="{ x: 80 }"
+  :leave="{ x: 1000 }"
+>
+  Animated content
+</div>
+```
+
+### Marking Elements
+```html
+<span v-mark.red="3">Red highlight on click 3</span>
+<span v-mark.circle.orange="4">Orange circle on click 4</span>
+<span v-mark.underline.orange>Inline underline</span>
+```
+
+### Draggable Elements
+```html
+<img v-drag="'square'" src="image.jpg">
+<v-drag pos="x,y,width,height,rotation">
+  <div>Draggable content</div>
+</v-drag>
+<v-drag-arrow pos="x1,y1,x2,y2" two-way />
+```
+
+## Code Blocks
+
+### Basic Code Highlighting
+```markdown
+```ts
+const example = "TypeScript code"
+```
+```
+
+### Line Highlighting
+```markdown
+```ts {1|3|5-7}
+// Lines 1, 3, and 5-7 will be highlighted
+const example = "highlighted"
+```
+```
+
+### Monaco Editor
+```markdown
+```ts {monaco}
+// Editable code block
+const editable = "edit me"
+```
+```
+
+### Monaco Runner
+```markdown
+```ts {monaco-run}
+// Executable code block
+console.log("runs in browser")
+```
+```
+
+### TwoSlash Support
+```markdown
+```ts {all|4|6|6-7|9|all} twoslash
+// TypeScript with hover information
+import { computed, ref } from 'vue'
+```
+```
+
+### Magic Move (Code Transitions)
+```markdown
+````md magic-move {lines: true}
+```ts {*|2|*}
+// Step 1
+```
+
+```ts {*|1-2|3-4|3-4,8}
+// Step 2
+```
+````
+```
+
+## Built-in Components
+
+### Table of Contents
+```html
+<Toc minDepth="1" maxDepth="2" />
+```
+
+### Tweet Embed
+```html
+<Tweet id="1390115482657726468" scale="0.65" />
+```
+
+### YouTube Embed
+```html
+<Youtube id="video-id" />
+```
+
+### Arrows
+```html
+<arrow v-click="[4, 5]" x1="350" y1="310" x2="195" y2="342" color="#953" width="2" arrowSize="1" />
+```
+
+### Powered By
+```html
+<PoweredBySlidev mt-10 />
+```
+
+## External Code Inclusion
+```markdown
+<<< @/snippets/external.ts#snippet
+```
+
+## Diagrams
+
+### Mermaid Diagrams
+```markdown
+```mermaid {scale: 0.5, alt: 'Description'}
+sequenceDiagram
+    Alice->John: Hello John, how are you?
+```
+```
+
+### PlantUML Diagrams
+```markdown
+```plantuml {scale: 0.7}
+@startuml
+package "Some Group" {
+  HTTP - [First Component]
+}
+@enduml
+```
+```
+
+## LaTeX Support
+
+### Inline Math
+```markdown
+Inline $\sqrt{3x-1}+(1+x)^2$
+```
+
+### Block Math with Animations
+```markdown
+$$ {1|3|all}
+\begin{aligned}
+\nabla \cdot \vec{E} &= \frac{\rho}{\varepsilon_0}
+\end{aligned}
+$$
+```
+
+## CSS and Styling
+
+### Slide-scoped Styles
+```html
+<style>
+h1 {
+  background-color: #2B90B6;
+  background-image: linear-gradient(45deg, #4EC5D4 10%, #146b8c 20%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+</style>
+```
+
+### UnoCSS Classes
+```html
+<div grid="~ cols-2 gap-4" m="t-4">
+  <div>Left column</div>
+  <div>Right column</div>
+</div>
+```
+
+### Custom Classes
+```html
+<div class="abs-br m-6 text-xl">
+  <button class="slidev-icon-btn">
+    <carbon:edit />
+  </button>
+</div>
+```
+
+## Vue Script Setup
+```html
+<script setup lang="ts">
+const final = {
+  x: 0,
+  y: 0,
+  rotate: 0,
+  scale: 1,
+  transition: {
+    type: 'spring',
+    damping: 10,
+    stiffness: 20,
+    mass: 2
+  }
+}
+</script>
+```
+
+## Event Handling
+```html
+<div @click="$slidev.nav.next" class="mt-12 py-1" hover:bg="white op-10">
+  Press Space for next page <carbon:arrow-right />
+</div>
+
+<button @click="$slidev.nav.openInEditor()" title="Open in Editor">
+  <carbon:edit />
+</button>
+```
+
+## Icons
+Use Carbon icons with the `carbon:` prefix:
+```html
+<carbon:arrow-right />
+<carbon:edit />
+<carbon:logo-github />
+```
+
+## Notes
+Add presenter notes using HTML comments at the end of slides:
+```html
+<!--
+Presenter note with **bold**, *italic*, and ~~striked~~ text.
+
+[click] This will be highlighted after the first click
+[click:3] Last click (skip two clicks)
+-->
+```
+
+## Keyboard Shortcuts Reference
+- `right` / `space`: next animation or slide
+- `left` / `shift+space`: previous animation or slide
+- `up`: previous slide
+- `down`: next slide
+
+## Best Practices
+
+1. **Slide Structure**: Always use `---` to separate slides
+2. **Frontmatter**: Keep frontmatter concise and relevant
+3. **Animations**: Use `v-click` sparingly for better flow
+4. **Code**: Use appropriate language tags and line highlighting
+5. **Components**: Leverage built-in components for common functionality
+6. **Styling**: Use UnoCSS classes for consistent styling
+7. **Notes**: Add presenter notes for better presentation delivery
+8. **Accessibility**: Include alt text for images and proper heading structure
+
+## Common Patterns
+
+### Interactive Elements
+```html
+<div v-click>
+  <div v-click="2">
+    <span v-mark.red="3">Highlighted text</span>
+  </div>
+</div>
+```
+
+### Grid Layouts
+```html
+<div grid="~ cols-2 gap-4" m="t-4">
+  <div>Content 1</div>
+  <div>Content 2</div>
+</div>
+```
+
+### Code with Arrows
+```ts
+// Code block
+const example = "code"
+```
+<arrow v-click="[1, 2]" x1="100" y1="100" x2="200" y2="200" color="#953" width="2" />
+
+### Imported Slides
+```markdown
+---
+src: ./pages/imported-slides.md
+hide: false
+---
+```
+
+## Theme Configuration
+Themes can be configured in frontmatter:
+```yaml
+---
+theme: seriph
+themeConfig:
+  primary: '#42b883'
+  secondary: '#35495e'
+---
+```
+
+## Export Options
+Slidev can export to:
+- PDF: `slidev export`
+- PNG: `slidev export --format png`
+- PPTX: `slidev export --format pptx`
+- SPA: `slidev build` 
