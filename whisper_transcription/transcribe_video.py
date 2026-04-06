@@ -61,6 +61,66 @@ def transcribe_to_sentences(video_path):
 
     return sentence_list
 
+# Build sentence-like segments from word-level output
+def sentences_from_words(words):
+    sentence_list = []
+    current_words = []
+    sentence_start = None
+    for w in words:
+        text = (w.get("word") or "").strip()
+        if text == "":
+            continue
+        if sentence_start is None:
+            sentence_start = w.get("start")
+        current_words.append(w)
+        # Sentence boundary heuristics: end on punctuation or long gap
+        is_boundary = False
+        if any(text.endswith(p) for p in [".", "!", "?", "…"]):
+            is_boundary = True
+        else:
+            if len(current_words) >= 30:
+                is_boundary = True
+        if is_boundary:
+            sentence_text = " ".join(x.get("word", "").strip() for x in current_words).strip()
+            sentence_end = current_words[-1].get("end")
+            if sentence_text:
+                sentence_list.append({
+                    "text": sentence_text,
+                    "start": sentence_start,
+                    "end": sentence_end
+                })
+            current_words = []
+            sentence_start = None
+    if current_words:
+        sentence_text = " ".join(x.get("word", "").strip() for x in current_words).strip()
+        sentence_end = current_words[-1].get("end")
+        if sentence_text:
+            sentence_list.append({
+                "text": sentence_text,
+                "start": sentence_start,
+                "end": sentence_end
+            })
+    return sentence_list
+
+# Unified transcribe entrypoint used by the API
+def transcribe(video_path, mode="both"):
+    # Supported modes: "word", "sentence", "sentence_from_words", "both"
+    mode = (mode or "both").lower()
+    if mode == "word":
+        word_list = transcribe_with_word_timestamps(video_path)
+        return {"word_level": word_list}
+    if mode == "sentence":
+        sentences = transcribe_to_sentences(video_path)
+        return {"sentence_level": sentences}
+    if mode == "sentence_from_words":
+        word_list = transcribe_with_word_timestamps(video_path)
+        sentences = sentences_from_words(word_list)
+        return {"sentence_level": sentences}
+    # both (default)
+    word_list = transcribe_with_word_timestamps(video_path)
+    sentences = transcribe_to_sentences(video_path)
+    return {"word_level": word_list, "sentence_level": sentences}
+
 def main():
     parser = argparse.ArgumentParser(description="Transcribe video with word or sentence level timestamps.")
     parser.add_argument('--mode', choices=['word', 'sentence'], default='sentence', help='Transcription mode: word or sentence (default: sentence)')
